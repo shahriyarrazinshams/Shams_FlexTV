@@ -3,19 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shams FlexTV API</title>
+    <title>Shams FlexTV 🚀</title>
+    <!-- Clappr Player Script (HLS .m3u8 প্লে করার জন্য) -->
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; text-align: center; background-color: #f4f4f9; }
-        h1 { color: #333; }
-        .endpoint { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; margin-top: 20px; }
-        a { color: #007bff; text-decoration: none; font-weight: bold; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar Styles */
+        .sidebar { width: 300px; background-color: #1a1a1a; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; background-color: #007bff; text-align: center; font-size: 20px; font-weight: bold; }
+        .channel-list { list-style: none; overflow-y: auto; flex: 1; }
+        .channel-item { padding: 15px 20px; border-bottom: 1px solid #2a2a2a; cursor: pointer; transition: background 0.3s; display: flex; align-items: center; justify-content: space-between; }
+        .channel-item:hover { background-color: #2b2b2b; }
+        .channel-item.active { background-color: #007bff; font-weight: bold; }
+        .category-badge { font-size: 11px; background: #444; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+
+        /* Main Content / Video Player Area */
+        .main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #000; position: relative; }
+        #player { width: 100%; max-width: 800px; aspect-ratio: 16/9; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .player-info { margin-top: 20px; text-align: center; }
+        .player-info h2 { font-size: 24px; margin-bottom: 5px; color: #007bff; }
+        
+        @media (max-width: 768px) {
+            body { flex-direction: column-reverse; }
+            .sidebar { width: 100%; height: 40vh; }
+            .main-content { height: 60vh; }
+        }
     </style>
 </head>
 <body>
-    <h1>Welcome to Shams FlexTV API 🚀</h1>
-    <p>Your static JSON API is live.</p>
-    <div class="endpoint">
-        📢 Channels Endpoint: <a href="./api/channels.json" target="_blank">/api/channels.json</a>
+
+    <!-- বাম পাশের চ্যানেল লিস্ট -->
+    <div class="sidebar">
+        <div class="sidebar-header">Shams FlexTV 📺</div>
+        <ul class="channel-list" id="channelList">
+            <!-- API থেকে চ্যানেল এখানে লোড হবে -->
+            <li style="padding: 20px; text-align: center;">Loading channels...</li>
+        </ul>
     </div>
+
+    <!-- ডান পাশের ভিডিও প্লেয়ার -->
+    <div class="main-content">
+        <div id="player"></div>
+        <div class="player-info">
+            <h2 id="currentChannelName">Select a Channel</h2>
+            <p id="currentChannelCat">Enjoy high-quality streaming</p>
+        </div>
+    </div>
+
+    <script>
+        let playerInstance = null;
+        // আপনার লাইভ API লিঙ্ক
+        const apiURL = "https://shahriyarrazinshams.github.io/Shams_FlexTV/api/channels.json";
+
+        // ভিডিও প্লে করার ফাংশন
+        function playStream(url, name, category) {
+            document.getElementById('currentChannelName').innerText = name;
+            document.getElementById('currentChannelCat').innerText = "Category: " + category.toUpperCase();
+
+            // যদি আগের কোনো প্লেয়ার রানিং থাকে তবে তা ডেস্ট্রয় করবে
+            if (playerInstance) {
+                playerInstance.destroy();
+            }
+
+            // নতুন Clappr Player তৈরি
+            playerInstance = new Clappr.Player({
+                source: url,
+                parentId: "#player",
+                width: '100%',
+                height: '100%',
+                autoPlay: true,
+                mute: false
+            });
+        }
+
+        // API থেকে ডেটা ফেচ করে ওয়েবসাইটে দেখানো
+        async function loadChannels() {
+            try {
+                const response = await fetch(apiURL);
+                const channels = await response.json();
+                const listContainer = document.getElementById('channelList');
+                listContainer.innerHTML = ""; // লোডিং টেক্সট ক্লিয়ার করা
+
+                channels.forEach((channel, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'channel-item';
+                    li.innerHTML = `
+                        <span>${channel.name}</span>
+                        <span class="category-badge">${channel.category}</span>
+                    `;
+
+                    // চ্যানেলে ক্লিক করলে যা হবে
+                    li.addEventListener('click', () => {
+                        // একটিভ ক্লাস ম্যানেজমেন্ট
+                        document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+                        li.classList.add('active');
+                        
+                        // প্লে করা শুরু
+                        playStream(channel.url, channel.name, channel.category);
+                    });
+
+                    listContainer.appendChild(li);
+
+                    // প্রথম চ্যানেলটি অটোমেটিক প্লে করার জন্য (অপশনাল)
+                    if (index === 0) {
+                        li.classList.add('active');
+                        playStream(channel.url, channel.name, channel.category);
+                    }
+                });
+            } catch (error) {
+                console.error("Error loading channels:", error);
+                document.getElementById('channelList').innerHTML = "<li style='padding:20px; color:red; text-align:center;'>Failed to load channels!</li>";
+            }
+        }
+
+        // পেজ লোড হলে রান হবে
+        window.onload = loadChannels;
+    </script>
 </body>
 </html>
