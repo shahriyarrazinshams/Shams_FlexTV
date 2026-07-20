@@ -1,0 +1,9 @@
+[
+  {
+    "id": "somoytv.bd",
+    "name": "Somoy TV",
+    "country": "BD",
+    "category": "news",
+    "url": "https://raw.githubusercontent.com/iptv-org/iptv/master/channels/bd.m3u"
+  }
+]
