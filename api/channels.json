@@ -1,9 +1,9 @@
 [
   {
-    "id": "jamunatv.bd",
-    "name": "Jamuna TV",
-    "country": "BD",
-    "category": "news",
-    "url": "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8"
+    "id": "test.live",
+    "name": "Live Test Stream",
+    "country": "Global",
+    "category": "test",
+    "url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
   }
 ]
